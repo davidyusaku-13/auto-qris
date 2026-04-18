@@ -47,7 +47,7 @@ export default function App() {
         setErrors(["Failed to convert QRIS"]);
       }
     },
-    [qrisString]
+    [qrisString],
   );
 
   const handleReset = useCallback(() => {
@@ -72,10 +72,7 @@ export default function App() {
         {parsed && (
           <>
             <QRISInfo data={parsed} />
-            <ConvertForm
-              parsed={parsed}
-              onConvert={handleConvert}
-            />
+            <ConvertForm parsed={parsed} onConvert={handleConvert} />
           </>
         )}
 

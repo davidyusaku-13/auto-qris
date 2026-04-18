@@ -8,6 +8,65 @@ interface Props {
   errors: string[];
 }
 
+interface DecodeAttempt {
+  sx: number;
+  sy: number;
+  sw: number;
+  sh: number;
+  scale: number;
+}
+
+function decodeQRCodeFromImage(img: HTMLImageElement): string | null {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return null;
+
+  const attempts: DecodeAttempt[] = [
+    { sx: 0, sy: 0, sw: img.width, sh: img.height, scale: 1 },
+    { sx: 0, sy: 0, sw: img.width, sh: img.height, scale: 2 },
+    {
+      sx: img.width * 0.08,
+      sy: img.height * 0.22,
+      sw: img.width * 0.84,
+      sh: img.height * 0.56,
+      scale: 2,
+    },
+    {
+      sx: img.width * 0.12,
+      sy: img.height * 0.25,
+      sw: img.width * 0.76,
+      sh: img.height * 0.5,
+      scale: 3,
+    },
+  ];
+
+  for (const attempt of attempts) {
+    canvas.width = Math.round(attempt.sw * attempt.scale);
+    canvas.height = Math.round(attempt.sh * attempt.scale);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(
+      img,
+      attempt.sx,
+      attempt.sy,
+      attempt.sw,
+      attempt.sh,
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+    );
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, canvas.width, canvas.height, {
+      inversionAttempts: "attemptBoth",
+    });
+
+    if (code?.data) return code.data.trim();
+  }
+
+  return null;
+}
+
 export function QRISInput({ value, onChange, onReset, errors }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -19,30 +78,30 @@ export function QRISInput({ value, onChange, onReset, errors }: Props) {
 
   const decodeImageFile = useCallback(
     (file: File) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext("2d");
-          if (!ctx) return;
-          ctx.drawImage(img, 0, 0);
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const code = jsQR(imageData.data, canvas.width, canvas.height);
-          if (code) {
-            onChange(code.data);
-          } else {
-            onChange("");
-            alert("QR code not found in image. Please try another image.");
-          }
-        };
-        img.src = reader.result as string;
+      const objectUrl = URL.createObjectURL(file);
+      const img = new Image();
+
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        const data = decodeQRCodeFromImage(img);
+
+        if (data) {
+          onChange(data);
+        } else {
+          onChange("");
+          alert("QR code not found in image. Please try another image.");
+        }
       };
-      reader.readAsDataURL(file);
+
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        onChange("");
+        alert("Failed to read image file.");
+      };
+
+      img.src = objectUrl;
     },
-    [onChange]
+    [onChange],
   );
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,7 +134,7 @@ export function QRISInput({ value, onChange, onReset, errors }: Props) {
         }
       }
     },
-    [decodeImageFile]
+    [decodeImageFile],
   );
 
   useEffect(() => {
@@ -174,8 +233,18 @@ export function QRISInput({ value, onChange, onReset, errors }: Props) {
             className="absolute top-2 right-2 p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             aria-label="Clear"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         )}
@@ -201,8 +270,18 @@ export function QRISInput({ value, onChange, onReset, errors }: Props) {
           onClick={() => fileRef.current?.click()}
           className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900 text-sm font-medium transition-colors"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.41a2.25 2.25 0 013.182 0l2.909 2.91m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.41a2.25 2.25 0 013.182 0l2.909 2.91m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
+            />
           </svg>
           Upload Image
         </button>
@@ -215,9 +294,23 @@ export function QRISInput({ value, onChange, onReset, errors }: Props) {
               : "border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
           }`}
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z"
+            />
           </svg>
           {scanning ? "Stop Camera" : "Scan Camera"}
         </button>
@@ -234,12 +327,7 @@ export function QRISInput({ value, onChange, onReset, errors }: Props) {
       {/* Camera view */}
       {scanning && (
         <div className="relative rounded-xl overflow-hidden border border-gray-300 dark:border-gray-700">
-          <video
-            ref={videoRef}
-            className="w-full"
-            playsInline
-            muted
-          />
+          <video ref={videoRef} className="w-full" playsInline muted />
           <canvas ref={canvasRef} className="hidden" />
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-48 h-48 border-2 border-white/70 rounded-2xl" />

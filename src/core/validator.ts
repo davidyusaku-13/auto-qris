@@ -16,9 +16,7 @@ export function validateQRIS(qrisString: string): ValidationResult {
 
   // Must start with payload format indicator "000201"
   if (!str.startsWith("000201")) {
-    errors.push(
-      'QRIS must start with Payload Format Indicator "000201"'
-    );
+    errors.push('QRIS must start with Payload Format Indicator "000201"');
   }
 
   // Minimum length check (header + CRC = at least 20 chars)
@@ -34,7 +32,7 @@ export function validateQRIS(qrisString: string): ValidationResult {
 
   if (declaredCRC.toUpperCase() !== calculatedCRC) {
     errors.push(
-      `CRC mismatch: expected ${calculatedCRC}, got ${declaredCRC.toUpperCase()}`
+      `CRC mismatch: expected ${calculatedCRC}, got ${declaredCRC.toUpperCase()}`,
     );
   }
 
@@ -70,7 +68,7 @@ export function validateQRIS(qrisString: string): ValidationResult {
   const method = elements.find((e) => e.tag === "01");
   if (method && method.value !== "11" && method.value !== "12") {
     errors.push(
-      `Invalid Point of Initiation Method: "${method.value}" (must be "11" or "12")`
+      `Invalid Point of Initiation Method: "${method.value}" (must be "11" or "12")`,
     );
   }
 

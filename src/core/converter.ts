@@ -34,7 +34,7 @@ function makeTLV(tag: string, value: string, name = ""): TLV {
  */
 export function convertQRIS(
   qrisString: string,
-  options: ConvertOptions
+  options: ConvertOptions,
 ): string {
   const elements = parseTLV(qrisString);
 
@@ -66,8 +66,8 @@ export function convertQRIS(
             makeTLV(
               "56",
               options.fee.value.toString(),
-              "Value of Convenience Fee (Fixed)"
-            )
+              "Value of Convenience Fee (Fixed)",
+            ),
           );
         } else {
           result.push(makeTLV("55", "03", "Tip or Convenience Indicator"));
@@ -75,8 +75,8 @@ export function convertQRIS(
             makeTLV(
               "57",
               options.fee.value.toString(),
-              "Value of Convenience Fee (%)"
-            )
+              "Value of Convenience Fee (%)",
+            ),
           );
         }
       }

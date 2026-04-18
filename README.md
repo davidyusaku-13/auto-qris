@@ -29,10 +29,10 @@
 
 There are two types of QRIS:
 
-| Type | Description |
-|------|-------------|
-| **Static** | QR code without a fixed amount — the customer enters the payment amount manually |
-| **Dynamic** | QR code with a pre-set amount — the customer simply scans and pays |
+| Type        | Description                                                                      |
+| ----------- | -------------------------------------------------------------------------------- |
+| **Static**  | QR code without a fixed amount — the customer enters the payment amount manually |
+| **Dynamic** | QR code with a pre-set amount — the customer simply scans and pays               |
 
 This tool converts **Static → Dynamic** by injecting a transaction amount (and optional service fee) into the QRIS payload, then recalculating the CRC16 checksum.
 
@@ -116,6 +116,7 @@ npm run cli
 ```
 
 The CLI will prompt you for:
+
 1. QRIS string input
 2. Transaction amount (Rupiah)
 3. Optional service fee (fixed or percentage)
@@ -139,25 +140,25 @@ import { parseQRIS } from "./src/core";
 
 const data = parseQRIS("00020101021126570011ID.DANA.WWW...");
 
-console.log(data.merchantName);  // "Warung Sayur"
-console.log(data.merchantCity);  // "Kab. Demak"
-console.log(data.method);        // "static"
-console.log(data.currency);      // "360"
+console.log(data.merchantName); // "Warung Sayur"
+console.log(data.merchantCity); // "Kab. Demak"
+console.log(data.method); // "static"
+console.log(data.currency); // "360"
 ```
 
 **Returns:** `QRISData`
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `version` | `string` | Payload format indicator |
-| `method` | `"static" \| "dynamic"` | Point of initiation method |
-| `merchantName` | `string` | Merchant name |
-| `merchantCity` | `string` | Merchant city |
-| `merchantCategoryCode` | `string` | MCC code |
-| `currency` | `string` | Transaction currency code (360 = IDR) |
-| `amount` | `string?` | Transaction amount (dynamic only) |
-| `merchantAccountInfo` | `MerchantAccountInfo[]` | Payment provider details |
-| `raw` | `TLV[]` | Raw parsed TLV elements |
+| Field                  | Type                    | Description                           |
+| ---------------------- | ----------------------- | ------------------------------------- |
+| `version`              | `string`                | Payload format indicator              |
+| `method`               | `"static" \| "dynamic"` | Point of initiation method            |
+| `merchantName`         | `string`                | Merchant name                         |
+| `merchantCity`         | `string`                | Merchant city                         |
+| `merchantCategoryCode` | `string`                | MCC code                              |
+| `currency`             | `string`                | Transaction currency code (360 = IDR) |
+| `amount`               | `string?`               | Transaction amount (dynamic only)     |
+| `merchantAccountInfo`  | `MerchantAccountInfo[]` | Payment provider details              |
+| `raw`                  | `TLV[]`                 | Raw parsed TLV elements               |
 
 ### `convertQRIS(qrisString, options)`
 
@@ -238,33 +239,33 @@ Dynamic QRIS
 
 ### Key QRIS Tags
 
-| Tag | Name | Example |
-|-----|------|---------|
-| `00` | Payload Format Indicator | `01` |
-| `01` | Point of Initiation | `11` (static) / `12` (dynamic) |
-| `26-51` | Merchant Account Info | Contains provider ID, merchant ID |
-| `52` | Merchant Category Code | `5812` (Restaurant) |
-| `53` | Currency | `360` (IDR) |
-| `54` | Transaction Amount | `50000` |
-| `55` | Tip Indicator | `02` (fixed) / `03` (percentage) |
-| `56` | Fixed Fee | `1000` |
-| `57` | Percentage Fee | `2.5` |
-| `58` | Country Code | `ID` |
-| `59` | Merchant Name | `Warung Sayur Bu Sugeng` |
-| `60` | Merchant City | `Kab. Demak` |
-| `63` | CRC16 Checksum | `58C7` |
+| Tag     | Name                     | Example                           |
+| ------- | ------------------------ | --------------------------------- |
+| `00`    | Payload Format Indicator | `01`                              |
+| `01`    | Point of Initiation      | `11` (static) / `12` (dynamic)    |
+| `26-51` | Merchant Account Info    | Contains provider ID, merchant ID |
+| `52`    | Merchant Category Code   | `5812` (Restaurant)               |
+| `53`    | Currency                 | `360` (IDR)                       |
+| `54`    | Transaction Amount       | `50000`                           |
+| `55`    | Tip Indicator            | `02` (fixed) / `03` (percentage)  |
+| `56`    | Fixed Fee                | `1000`                            |
+| `57`    | Percentage Fee           | `2.5`                             |
+| `58`    | Country Code             | `ID`                              |
+| `59`    | Merchant Name            | `Warung Sayur Bu Sugeng`          |
+| `60`    | Merchant City            | `Kab. Demak`                      |
+| `63`    | CRC16 Checksum           | `58C7`                            |
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Language | TypeScript |
-| Web Framework | React 19 |
-| Build Tool | Vite |
-| Styling | Tailwind CSS |
-| QR Decode | jsQR |
-| QR Generate | qrcode |
-| CLI Runtime | tsx |
+| Layer         | Technology   |
+| ------------- | ------------ |
+| Language      | TypeScript   |
+| Web Framework | React 19     |
+| Build Tool    | Vite         |
+| Styling       | Tailwind CSS |
+| QR Decode     | jsQR         |
+| QR Generate   | qrcode       |
+| CLI Runtime   | tsx          |
 
 ## Project Structure
 
