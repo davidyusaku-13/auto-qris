@@ -3,6 +3,7 @@
   "version": "2.0.0",
   "description": "QRIS Static to Dynamic converter — parse, validate, and convert Indonesian QRIS payment codes",
   "type": "module",
+  "packageManager": "bun@1.3.12",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

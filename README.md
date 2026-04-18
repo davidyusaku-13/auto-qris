@@ -84,20 +84,20 @@ This tool converts **Static → Dynamic** by injecting a transaction amount (and
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) >= 18
+- [Bun](https://bun.sh/) >= 1.0
 
 ### Installation
 
 ```bash
 git clone https://github.com/verssache/qris-dinamis.git
 cd qris-dinamis
-npm install
+bun install
 ```
 
 ### Run Web App (Development)
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 Opens at `http://localhost:5173`
@@ -105,14 +105,14 @@ Opens at `http://localhost:5173`
 ### Build for Production
 
 ```bash
-npm run build
-npm run preview
+bun run build
+bun run preview
 ```
 
 ## CLI Usage
 
 ```bash
-npm run cli
+bun run cli
 ```
 
 The CLI will prompt you for:
@@ -121,10 +121,10 @@ The CLI will prompt you for:
 2. Transaction amount (Rupiah)
 3. Optional service fee (fixed or percentage)
 
-### Quick One-liner with `tsx`
+### Quick One-liner
 
 ```bash
-npx tsx src/cli.ts
+bunx tsx src/cli.ts
 ```
 
 ## API Reference
