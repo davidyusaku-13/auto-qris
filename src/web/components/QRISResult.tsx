@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import QRCode from "qrcode";
 import { parseQRIS } from "@core/index";
 
@@ -10,7 +10,7 @@ export function QRISResult({ qrisString }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [copied, setCopied] = useState(false);
 
-  const parsed = parseQRIS(qrisString);
+  const parsed = useMemo(() => parseQRIS(qrisString), [qrisString]);
 
   useEffect(() => {
     if (canvasRef.current && qrisString) {
@@ -21,15 +21,29 @@ export function QRISResult({ qrisString }: Props) {
           dark: "#000000",
           light: "#FFFFFF",
         },
-        errorCorrectionLevel: "M",
+        errorCorrectionLevel: "Q",
       });
     }
   }, [qrisString]);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(qrisString);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(qrisString);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for browsers that deny clipboard access
+      const textarea = document.createElement("textarea");
+      textarea.value = qrisString;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   const handleDownload = () => {

@@ -1,9 +1,10 @@
-import type { TLV, QRISData, MerchantAccountInfo } from "./types";
+import type { TLV, QRISData, MerchantAccountInfo, ParseResult } from "./types";
+import { TAGS, MERCHANT_TAG_RANGE } from "./types";
 
 /** Map of known EMVCo / QRIS tag IDs to human-readable names */
 const TAG_NAMES: Record<string, string> = {
-  "00": "Payload Format Indicator",
-  "01": "Point of Initiation Method",
+  [TAGS.PAYLOAD_FORMAT]: "Payload Format Indicator",
+  [TAGS.INITIATION_METHOD]: "Point of Initiation Method",
   "02": "Visa",
   "03": "Mastercard",
   "04": "Mastercard",
@@ -34,40 +35,85 @@ const TAG_NAMES: Record<string, string> = {
   "49": "Merchant Account Information",
   "50": "Merchant Account Information",
   "51": "Merchant Account Information",
-  "52": "Merchant Category Code",
-  "53": "Transaction Currency",
-  "54": "Transaction Amount",
-  "55": "Tip or Convenience Indicator",
-  "56": "Value of Convenience Fee (Fixed)",
-  "57": "Value of Convenience Fee (%)",
-  "58": "Country Code",
-  "59": "Merchant Name",
-  "60": "Merchant City",
-  "61": "Postal Code",
-  "62": "Additional Data Field",
-  "63": "CRC",
+  [TAGS.MERCHANT_CATEGORY]: "Merchant Category Code",
+  [TAGS.CURRENCY]: "Transaction Currency",
+  [TAGS.AMOUNT]: "Transaction Amount",
+  [TAGS.TIP_INDICATOR]: "Tip or Convenience Indicator",
+  [TAGS.TIP_FIXED]: "Value of Convenience Fee (Fixed)",
+  [TAGS.TIP_PERCENTAGE]: "Value of Convenience Fee (%)",
+  [TAGS.COUNTRY_CODE]: "Country Code",
+  [TAGS.MERCHANT_NAME]: "Merchant Name",
+  [TAGS.MERCHANT_CITY]: "Merchant City",
+  [TAGS.POSTAL_CODE]: "Postal Code",
+  [TAGS.ADDITIONAL_DATA]: "Additional Data Field",
+  [TAGS.CRC]: "CRC",
 };
 
 /** Tags that contain nested TLV sub-elements */
 const NESTED_TAGS = new Set([
   ...Array.from({ length: 26 }, (_, i) => String(i + 26).padStart(2, "0")),
-  "62",
+  TAGS.ADDITIONAL_DATA,
 ]);
+
+/** Maximum allowed QRIS string length to prevent DoS */
+const MAX_INPUT_LENGTH = 4096;
 
 /**
  * Parse a raw TLV string into an array of TLV elements.
+ * Returns a ParseResult indicating success or partial failure.
  */
-export function parseTLV(data: string): TLV[] {
+export function parseTLV(data: string): ParseResult {
+  if (data.length > MAX_INPUT_LENGTH) {
+    return {
+      ok: false,
+      error: {
+        message: `Input too long: ${data.length} chars (max ${MAX_INPUT_LENGTH})`,
+        position: 0,
+        partialElements: [],
+      },
+    };
+  }
+
   const elements: TLV[] = [];
   let pos = 0;
 
   while (pos < data.length) {
-    if (pos + 4 > data.length) break;
+    if (pos + 4 > data.length) {
+      return {
+        ok: false,
+        error: {
+          message: `Incomplete TLV at position ${pos}: not enough data for tag+length`,
+          position: pos,
+          partialElements: elements,
+        },
+      };
+    }
 
     const tag = data.substring(pos, pos + 2);
-    const length = parseInt(data.substring(pos + 2, pos + 4), 10);
+    const lengthStr = data.substring(pos + 2, pos + 4);
+    const length = parseInt(lengthStr, 10);
 
-    if (isNaN(length) || pos + 4 + length > data.length) break;
+    if (isNaN(length)) {
+      return {
+        ok: false,
+        error: {
+          message: `Invalid length "${lengthStr}" at position ${pos + 2}`,
+          position: pos + 2,
+          partialElements: elements,
+        },
+      };
+    }
+
+    if (pos + 4 + length > data.length) {
+      return {
+        ok: false,
+        error: {
+          message: `Value overflow at tag ${tag}: expected ${length} chars but only ${data.length - pos - 4} available`,
+          position: pos + 4,
+          partialElements: elements,
+        },
+      };
+    }
 
     const value = data.substring(pos + 4, pos + 4 + length);
     const name = TAG_NAMES[tag] ?? `Unknown (${tag})`;
@@ -75,28 +121,44 @@ export function parseTLV(data: string): TLV[] {
     const element: TLV = { tag, name, length, value };
 
     if (NESTED_TAGS.has(tag)) {
-      element.children = parseTLV(value);
+      const childResult = parseTLV(value);
+      if (childResult.ok) {
+        element.children = childResult.elements;
+      } else {
+        // Nested parse failed — store raw value, continue
+        element.children = childResult.error.partialElements;
+      }
     }
 
     elements.push(element);
     pos += 4 + length;
   }
 
-  return elements;
+  return { ok: true, elements };
 }
 
 /**
  * Parse a QRIS string into a structured QRISData object.
+ * Throws if TLV parsing fails completely.
  */
 export function parseQRIS(qrisString: string): QRISData {
-  const raw = parseTLV(qrisString);
+  const result = parseTLV(qrisString);
+
+  let raw: TLV[];
+  if (result.ok) {
+    raw = result.elements;
+  } else if (result.error.partialElements.length > 0) {
+    raw = result.error.partialElements;
+  } else {
+    throw new Error(`Failed to parse QRIS: ${result.error.message}`);
+  }
 
   const findTag = (tag: string) => raw.find((t) => t.tag === tag);
 
-  const methodValue = findTag("01")?.value;
+  const methodValue = findTag(TAGS.INITIATION_METHOD)?.value;
   const method = methodValue === "12" ? "dynamic" : "static";
 
-  const tipIndicatorValue = findTag("55")?.value;
+  const tipIndicatorValue = findTag(TAGS.TIP_INDICATOR)?.value;
   let tipIndicator: QRISData["tipIndicator"];
   if (tipIndicatorValue === "01") tipIndicator = "prompt";
   else if (tipIndicatorValue === "02") tipIndicator = "fixed";
@@ -106,7 +168,7 @@ export function parseQRIS(qrisString: string): QRISData {
   const merchantAccountInfo: MerchantAccountInfo[] = raw
     .filter((t) => {
       const tagNum = parseInt(t.tag, 10);
-      return tagNum >= 26 && tagNum <= 51 && t.children;
+      return tagNum >= MERCHANT_TAG_RANGE.min && tagNum <= MERCHANT_TAG_RANGE.max && t.children;
     })
     .map((t) => {
       const children = t.children ?? [];
@@ -123,21 +185,21 @@ export function parseQRIS(qrisString: string): QRISData {
     });
 
   return {
-    version: findTag("00")?.value ?? "01",
+    version: findTag(TAGS.PAYLOAD_FORMAT)?.value ?? "01",
     method,
     merchantAccountInfo,
-    merchantCategoryCode: findTag("52")?.value ?? "",
-    currency: findTag("53")?.value ?? "360",
-    amount: findTag("54")?.value,
+    merchantCategoryCode: findTag(TAGS.MERCHANT_CATEGORY)?.value ?? "",
+    currency: findTag(TAGS.CURRENCY)?.value ?? "360",
+    amount: findTag(TAGS.AMOUNT)?.value,
     tipIndicator,
-    tipFixed: findTag("56")?.value,
-    tipPercentage: findTag("57")?.value,
-    countryCode: findTag("58")?.value ?? "ID",
-    merchantName: findTag("59")?.value ?? "",
-    merchantCity: findTag("60")?.value ?? "",
-    postalCode: findTag("61")?.value ?? "",
-    additionalData: findTag("62")?.children,
-    crc: findTag("63")?.value ?? "",
+    tipFixed: findTag(TAGS.TIP_FIXED)?.value,
+    tipPercentage: findTag(TAGS.TIP_PERCENTAGE)?.value,
+    countryCode: findTag(TAGS.COUNTRY_CODE)?.value ?? "ID",
+    merchantName: findTag(TAGS.MERCHANT_NAME)?.value ?? "",
+    merchantCity: findTag(TAGS.MERCHANT_CITY)?.value ?? "",
+    postalCode: findTag(TAGS.POSTAL_CODE)?.value ?? "",
+    additionalData: findTag(TAGS.ADDITIONAL_DATA)?.children,
+    crc: findTag(TAGS.CRC)?.value ?? "",
     raw,
   };
 }

@@ -1,6 +1,7 @@
 import { calculateCRC16 } from "./crc16";
 import { parseTLV } from "./parser";
 import type { ValidationResult } from "./types";
+import { TAGS, MERCHANT_TAG_RANGE } from "./types";
 
 /**
  * Validate a QRIS string for structural correctness.
@@ -37,25 +38,32 @@ export function validateQRIS(qrisString: string): ValidationResult {
   }
 
   // Try to parse TLV structure
-  const elements = parseTLV(str);
+  const parseResult = parseTLV(str);
+  const elements = parseResult.ok
+    ? parseResult.elements
+    : parseResult.error.partialElements;
 
   if (elements.length === 0) {
     errors.push("Failed to parse any TLV elements");
     return { valid: false, errors };
   }
 
+  if (!parseResult.ok) {
+    errors.push(`TLV parse warning: ${parseResult.error.message}`);
+  }
+
   // Check required tags
   const tags = new Set(elements.map((e) => e.tag));
 
   const requiredTags = [
-    { tag: "00", name: "Payload Format Indicator" },
-    { tag: "01", name: "Point of Initiation Method" },
-    { tag: "52", name: "Merchant Category Code" },
-    { tag: "53", name: "Transaction Currency" },
-    { tag: "58", name: "Country Code" },
-    { tag: "59", name: "Merchant Name" },
-    { tag: "60", name: "Merchant City" },
-    { tag: "63", name: "CRC" },
+    { tag: TAGS.PAYLOAD_FORMAT, name: "Payload Format Indicator" },
+    { tag: TAGS.INITIATION_METHOD, name: "Point of Initiation Method" },
+    { tag: TAGS.MERCHANT_CATEGORY, name: "Merchant Category Code" },
+    { tag: TAGS.CURRENCY, name: "Transaction Currency" },
+    { tag: TAGS.COUNTRY_CODE, name: "Country Code" },
+    { tag: TAGS.MERCHANT_NAME, name: "Merchant Name" },
+    { tag: TAGS.MERCHANT_CITY, name: "Merchant City" },
+    { tag: TAGS.CRC, name: "CRC" },
   ];
 
   for (const req of requiredTags) {
@@ -65,7 +73,7 @@ export function validateQRIS(qrisString: string): ValidationResult {
   }
 
   // Check Point of Initiation Method value
-  const method = elements.find((e) => e.tag === "01");
+  const method = elements.find((e) => e.tag === TAGS.INITIATION_METHOD);
   if (method && method.value !== "11" && method.value !== "12") {
     errors.push(
       `Invalid Point of Initiation Method: "${method.value}" (must be "11" or "12")`,
@@ -75,10 +83,10 @@ export function validateQRIS(qrisString: string): ValidationResult {
   // Check at least one merchant account info exists (tags 26-51)
   const hasMerchant = elements.some((e) => {
     const n = parseInt(e.tag, 10);
-    return n >= 26 && n <= 51;
+    return n >= MERCHANT_TAG_RANGE.min && n <= MERCHANT_TAG_RANGE.max;
   });
   if (!hasMerchant) {
-    errors.push("No Merchant Account Information found (tags 26-51)");
+    errors.push(`No Merchant Account Information found (tags ${MERCHANT_TAG_RANGE.min}-${MERCHANT_TAG_RANGE.max})`);
   }
 
   return { valid: errors.length === 0, errors };

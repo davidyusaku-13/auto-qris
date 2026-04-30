@@ -75,9 +75,11 @@ export function QRISInput({ value, onChange, onReset, errors }: Props) {
   const animationRef = useRef<number>(0);
   const [scanning, setScanning] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [inputError, setInputError] = useState<string | null>(null);
 
   const decodeImageFile = useCallback(
     (file: File) => {
+      setInputError(null);
       const objectUrl = URL.createObjectURL(file);
       const img = new Image();
 
@@ -89,14 +91,14 @@ export function QRISInput({ value, onChange, onReset, errors }: Props) {
           onChange(data);
         } else {
           onChange("");
-          alert("QR code not found in image. Please try another image.");
+          setInputError("QR code not found in image. Please try another image.");
         }
       };
 
       img.onerror = () => {
         URL.revokeObjectURL(objectUrl);
         onChange("");
-        alert("Failed to read image file.");
+        setInputError("Failed to read image file.");
       };
 
       img.src = objectUrl;
@@ -152,48 +154,66 @@ export function QRISInput({ value, onChange, onReset, errors }: Props) {
   }, []);
 
   const startCamera = async () => {
+    setInputError(null);
+    let stream: MediaStream;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
       });
-      streamRef.current = stream;
-      setScanning(true);
-
-      const video = videoRef.current;
-      if (!video) return;
-      video.srcObject = stream;
-      await video.play();
-
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-
-      const scan = () => {
-        if (!streamRef.current) return;
-        if (video.readyState === video.HAVE_ENOUGH_DATA) {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          ctx.drawImage(video, 0, 0);
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const code = jsQR(imageData.data, canvas.width, canvas.height);
-          if (code) {
-            onChange(code.data);
-            stopCamera();
-            return;
-          }
-        }
-        animationRef.current = requestAnimationFrame(scan);
-      };
-      scan();
     } catch {
-      alert("Camera access denied or unavailable.");
+      setInputError("Camera access denied or unavailable.");
+      return;
     }
+
+    // Guard: component may have unmounted during getUserMedia
+    streamRef.current = stream;
+    setScanning(true);
+
+    const video = videoRef.current;
+    if (!video) {
+      stream.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+      setScanning(false);
+      return;
+    }
+
+    video.srcObject = stream;
+    await video.play();
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const scan = () => {
+      if (!streamRef.current) return;
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, canvas.width, canvas.height);
+        if (code) {
+          onChange(code.data);
+          stopCamera();
+          return;
+        }
+      }
+      animationRef.current = requestAnimationFrame(scan);
+    };
+    scan();
   };
 
   useEffect(() => {
     return () => stopCamera();
   }, [stopCamera]);
+
+  // Clear local input error when parent errors change or value changes
+  useEffect(() => {
+    setInputError(null);
+  }, [value, errors]);
+
+  const allErrors = inputError ? [...errors, inputError] : errors;
 
   return (
     <div className="space-y-3">
@@ -206,7 +226,7 @@ export function QRISInput({ value, onChange, onReset, errors }: Props) {
         className={`relative rounded-xl border-2 border-dashed transition-colors ${
           dragOver
             ? "border-primary-500 bg-primary-50 dark:bg-primary-950/20"
-            : errors.length > 0
+            : allErrors.length > 0
               ? "border-red-300 dark:border-red-800"
               : value
                 ? "border-green-300 dark:border-green-800"
@@ -251,10 +271,10 @@ export function QRISInput({ value, onChange, onReset, errors }: Props) {
       </div>
 
       {/* Error messages */}
-      {errors.length > 0 && (
+      {allErrors.length > 0 && (
         <div className="rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 p-3">
           <ul className="text-sm text-red-600 dark:text-red-400 space-y-1">
-            {errors.map((err, i) => (
+            {allErrors.map((err, i) => (
               <li key={i} className="flex gap-2">
                 <span className="shrink-0">&#x2717;</span>
                 {err}
