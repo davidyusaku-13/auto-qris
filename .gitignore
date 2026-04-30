@@ -10,4 +10,6 @@ dist
 .dev.vars*
 !.dev.vars.example
 !.env.example
+# Hermes local QRIS helper scripts
 .hermes-convert-qris.ts
+.hermes-convert-qris.mjs
