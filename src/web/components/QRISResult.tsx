@@ -32,7 +32,6 @@ export function QRISResult({ qrisString }: Props) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback for browsers that deny clipboard access
       const textarea = document.createElement("textarea");
       textarea.value = qrisString;
       textarea.style.position = "fixed";
@@ -55,14 +54,14 @@ export function QRISResult({ qrisString }: Props) {
   };
 
   return (
-    <div className="rounded-xl border bg-white dark:bg-gray-900 overflow-hidden">
-      <div className="px-4 py-3 border-b bg-gray-50 dark:bg-gray-900/50">
-        <h2 className="text-sm font-semibold flex items-center gap-2">
+    <div className="brutal-card overflow-hidden">
+      <div className="px-4 py-3 border-b-3 border-black dark:border-white bg-brutal-lime">
+        <h2 className="text-sm font-bold uppercase tracking-wide flex items-center gap-2 text-black">
           <svg
-            className="w-4 h-4 text-green-500"
+            className="w-4 h-4"
             fill="none"
             viewBox="0 0 24 24"
-            strokeWidth={1.5}
+            strokeWidth={2}
             stroke="currentColor"
           >
             <path
@@ -76,49 +75,45 @@ export function QRISResult({ qrisString }: Props) {
       </div>
 
       <div className="p-6 flex flex-col items-center space-y-4">
-        {/* QR Code */}
-        <div className="bg-white p-3 rounded-xl shadow-sm">
+        <div className="border-3 border-black p-3 bg-white shadow-brutal">
           <canvas ref={canvasRef} />
         </div>
 
-        {/* Info */}
         <div className="text-center space-y-1">
-          <p className="text-sm font-medium">{parsed.merchantName}</p>
-          <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">
+          <p className="text-sm font-bold uppercase">{parsed.merchantName}</p>
+          <p className="text-3xl font-bold text-black dark:text-brutal-yellow">
             Rp {Number(parsed.amount ?? 0).toLocaleString("id-ID")}
           </p>
           {parsed.tipIndicator === "fixed" && parsed.tipFixed && (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs font-bold text-black/60 dark:text-white/60">
               + Fee Rp {Number(parsed.tipFixed).toLocaleString("id-ID")}
             </p>
           )}
           {parsed.tipIndicator === "percentage" && parsed.tipPercentage && (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs font-bold text-black/60 dark:text-white/60">
               + Fee {parsed.tipPercentage}%
             </p>
           )}
         </div>
 
-        {/* QRIS String */}
         <div className="w-full">
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 break-all font-mono text-xs text-gray-600 dark:text-gray-400 max-h-24 overflow-y-auto">
+          <div className="border-3 border-black dark:border-white bg-brutal-bg dark:bg-black/30 p-3 break-all font-mono text-xs font-bold max-h-24 overflow-y-auto shadow-brutal-sm dark:shadow-brutal-white-sm">
             {qrisString}
           </div>
         </div>
 
-        {/* Action buttons */}
-        <div className="flex gap-2 w-full">
+        <div className="flex gap-3 w-full">
           <button
             onClick={handleCopy}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium transition-colors"
+            className="brutal-btn flex-1 flex items-center justify-center gap-2 text-sm"
           >
             {copied ? (
               <>
                 <svg
-                  className="w-4 h-4 text-green-500"
+                  className="w-4 h-4"
                   fill="none"
                   viewBox="0 0 24 24"
-                  strokeWidth={1.5}
+                  strokeWidth={2}
                   stroke="currentColor"
                 >
                   <path
@@ -135,7 +130,7 @@ export function QRISResult({ qrisString }: Props) {
                   className="w-4 h-4"
                   fill="none"
                   viewBox="0 0 24 24"
-                  strokeWidth={1.5}
+                  strokeWidth={2}
                   stroke="currentColor"
                 >
                   <path
@@ -151,13 +146,13 @@ export function QRISResult({ qrisString }: Props) {
 
           <button
             onClick={handleDownload}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium transition-colors"
+            className="brutal-btn-primary flex-1 flex items-center justify-center gap-2 text-sm"
           >
             <svg
               className="w-4 h-4"
               fill="none"
               viewBox="0 0 24 24"
-              strokeWidth={1.5}
+              strokeWidth={2}
               stroke="currentColor"
             >
               <path

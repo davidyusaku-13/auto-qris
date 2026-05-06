@@ -165,7 +165,6 @@ export function QRISInput({ value, onChange, onReset, errors }: Props) {
       return;
     }
 
-    // Guard: component may have unmounted during getUserMedia
     streamRef.current = stream;
     setScanning(true);
 
@@ -208,7 +207,6 @@ export function QRISInput({ value, onChange, onReset, errors }: Props) {
     return () => stopCamera();
   }, [stopCamera]);
 
-  // Clear local input error when parent errors change or value changes
   useEffect(() => {
     setInputError(null);
   }, [value, errors]);
@@ -216,21 +214,21 @@ export function QRISInput({ value, onChange, onReset, errors }: Props) {
   const allErrors = inputError ? [...errors, inputError] : errors;
 
   return (
-    <div className="space-y-3">
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+    <div className="space-y-4">
+      <label className="block text-sm font-bold uppercase tracking-wide">
         QRIS String
       </label>
 
       {/* Text Input */}
       <div
-        className={`relative rounded-xl border-2 border-dashed transition-colors ${
+        className={`relative border-3 transition-all ${
           dragOver
-            ? "border-primary-500 bg-primary-50 dark:bg-primary-950/20"
+            ? "border-brutal-cyan bg-brutal-cyan/10 shadow-brutal-lg -translate-x-[1px] -translate-y-[1px]"
             : allErrors.length > 0
-              ? "border-red-300 dark:border-red-800"
+              ? "border-brutal-pink bg-brutal-pink/5 shadow-brutal"
               : value
-                ? "border-green-300 dark:border-green-800"
-                : "border-gray-300 dark:border-gray-700"
+                ? "border-brutal-lime bg-brutal-lime/5 shadow-brutal"
+                : "border-black dark:border-white shadow-brutal dark:shadow-brutal-white"
         }`}
         onDragOver={(e) => {
           e.preventDefault();
@@ -244,20 +242,20 @@ export function QRISInput({ value, onChange, onReset, errors }: Props) {
           onChange={(e) => onChange(e.target.value)}
           placeholder="Paste QRIS string here, or drag & drop a QR image..."
           rows={3}
-          className="w-full px-4 py-3 bg-transparent rounded-xl text-sm font-mono resize-none focus:outline-none placeholder:text-gray-400 dark:placeholder:text-gray-600"
+          className="w-full px-4 py-3 bg-transparent text-sm font-mono resize-none focus:outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500"
         />
 
         {value && (
           <button
             onClick={onReset}
-            className="absolute top-2 right-2 p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            className="absolute top-2 right-2 border-3 border-black dark:border-white bg-brutal-pink p-1 shadow-brutal-sm hover:translate-x-px hover:translate-y-px hover:shadow-none transition-all"
             aria-label="Clear"
           >
             <svg
-              className="w-4 h-4"
+              className="w-4 h-4 text-black"
               fill="none"
               viewBox="0 0 24 24"
-              strokeWidth={2}
+              strokeWidth={2.5}
               stroke="currentColor"
             >
               <path
@@ -272,8 +270,8 @@ export function QRISInput({ value, onChange, onReset, errors }: Props) {
 
       {/* Error messages */}
       {allErrors.length > 0 && (
-        <div className="rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 p-3">
-          <ul className="text-sm text-red-600 dark:text-red-400 space-y-1">
+        <div className="border-3 border-black dark:border-white bg-brutal-pink p-3 shadow-brutal dark:shadow-brutal-white">
+          <ul className="text-sm font-bold text-black space-y-1">
             {allErrors.map((err, i) => (
               <li key={i} className="flex gap-2">
                 <span className="shrink-0">&#x2717;</span>
@@ -285,16 +283,16 @@ export function QRISInput({ value, onChange, onReset, errors }: Props) {
       )}
 
       {/* Action buttons */}
-      <div className="flex gap-2">
+      <div className="flex gap-3">
         <button
           onClick={() => fileRef.current?.click()}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900 text-sm font-medium transition-colors"
+          className="brutal-btn flex-1 flex items-center justify-center gap-2 text-sm"
         >
           <svg
             className="w-4 h-4"
             fill="none"
             viewBox="0 0 24 24"
-            strokeWidth={1.5}
+            strokeWidth={2}
             stroke="currentColor"
           >
             <path
@@ -308,17 +306,17 @@ export function QRISInput({ value, onChange, onReset, errors }: Props) {
 
         <button
           onClick={scanning ? stopCamera : startCamera}
-          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex-1 flex items-center justify-center gap-2 text-sm font-bold border-3 border-black shadow-brutal transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-brutal-sm active:translate-x-[2px] active:translate-y-[2px] active:shadow-none ${
             scanning
-              ? "bg-red-500 hover:bg-red-600 text-white"
-              : "border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
-          }`}
+              ? "bg-brutal-pink text-black"
+              : "bg-white dark:bg-brutal-dark dark:border-white dark:shadow-brutal-white dark:hover:shadow-brutal-white-sm dark:text-white"
+          } px-4 py-2.5`}
         >
           <svg
             className="w-4 h-4"
             fill="none"
             viewBox="0 0 24 24"
-            strokeWidth={1.5}
+            strokeWidth={2}
             stroke="currentColor"
           >
             <path
@@ -346,14 +344,16 @@ export function QRISInput({ value, onChange, onReset, errors }: Props) {
 
       {/* Camera view */}
       {scanning && (
-        <div className="relative rounded-xl overflow-hidden border border-gray-300 dark:border-gray-700">
+        <div className="relative border-3 border-black dark:border-white overflow-hidden shadow-brutal dark:shadow-brutal-white">
           <video ref={videoRef} className="w-full" playsInline muted />
           <canvas ref={canvasRef} className="hidden" />
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-48 h-48 border-2 border-white/70 rounded-2xl" />
+            <div className="w-48 h-48 border-3 border-brutal-yellow" />
           </div>
-          <div className="absolute bottom-3 left-0 right-0 text-center text-sm text-white/80 drop-shadow">
-            Point camera at a QRIS code
+          <div className="absolute bottom-3 left-0 right-0 text-center">
+            <span className="bg-black text-white text-sm font-bold px-3 py-1 border-3 border-brutal-yellow">
+              Point camera at a QRIS code
+            </span>
           </div>
         </div>
       )}

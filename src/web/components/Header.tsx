@@ -4,23 +4,23 @@ export function Header() {
   const { dark, toggle } = useTheme();
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm">
-      <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">
+    <header className="sticky top-0 z-50 border-b-3 border-black dark:border-white bg-brutal-yellow dark:bg-brutal-dark">
+      <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl font-bold tracking-tight text-black">
             QRIS Dinamis
           </span>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 font-medium">
+          <span className="border-3 border-black bg-white px-2 py-0.5 text-xs font-bold text-black shadow-brutal-sm">
             v2.0
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <a
             href="https://github.com/verssache/qris-dinamis"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+            className="brutal-btn p-2 dark:border-black dark:bg-white dark:text-black dark:shadow-brutal"
             aria-label="GitHub"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -29,7 +29,7 @@ export function Header() {
           </a>
           <button
             onClick={toggle}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="brutal-btn p-2 dark:border-black dark:bg-white dark:text-black dark:shadow-brutal"
             aria-label="Toggle theme"
           >
             {dark ? (
@@ -37,7 +37,7 @@ export function Header() {
                 className="w-5 h-5"
                 fill="none"
                 viewBox="0 0 24 24"
-                strokeWidth={1.5}
+                strokeWidth={2}
                 stroke="currentColor"
               >
                 <path
@@ -51,7 +51,7 @@ export function Header() {
                 className="w-5 h-5"
                 fill="none"
                 viewBox="0 0 24 24"
-                strokeWidth={1.5}
+                strokeWidth={2}
                 stroke="currentColor"
               >
                 <path

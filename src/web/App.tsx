@@ -61,7 +61,7 @@ export default function App() {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-8 space-y-6">
+      <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-10 space-y-8">
         <QRISInput
           value={qrisString}
           onChange={handleQRISInput}

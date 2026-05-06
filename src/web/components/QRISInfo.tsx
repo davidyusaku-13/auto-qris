@@ -30,14 +30,14 @@ export function QRISInfo({ data }: Props) {
   const issuer = merchantInfo?.globallyUniqueId ?? "-";
 
   return (
-    <div className="rounded-xl border bg-white dark:bg-gray-900 overflow-hidden">
-      <div className="px-4 py-3 border-b bg-gray-50 dark:bg-gray-900/50">
-        <h2 className="text-sm font-semibold flex items-center gap-2">
+    <div className="brutal-card overflow-hidden">
+      <div className="px-4 py-3 border-b-3 border-black dark:border-white bg-brutal-cyan">
+        <h2 className="text-sm font-bold uppercase tracking-wide flex items-center gap-2 text-black">
           <svg
-            className="w-4 h-4 text-primary-500"
+            className="w-4 h-4"
             fill="none"
             viewBox="0 0 24 24"
-            strokeWidth={1.5}
+            strokeWidth={2}
             stroke="currentColor"
           >
             <path
@@ -49,7 +49,7 @@ export function QRISInfo({ data }: Props) {
           QRIS Information
         </h2>
       </div>
-      <div className="divide-y">
+      <div className="divide-y-3 divide-black dark:divide-white">
         <InfoRow label="Merchant" value={data.merchantName} />
         <InfoRow label="City" value={data.merchantCity} />
         <InfoRow label="Postal Code" value={data.postalCode} />
@@ -58,13 +58,13 @@ export function QRISInfo({ data }: Props) {
           label="Method"
           value={
             <span
-              className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+              className={`inline-flex border-3 border-black px-2 py-0.5 text-xs font-bold shadow-brutal-sm ${
                 data.method === "static"
-                  ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400"
-                  : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                  ? "bg-brutal-yellow text-black"
+                  : "bg-brutal-lime text-black"
               }`}
             >
-              {data.method === "static" ? "Static" : "Dynamic"}
+              {data.method === "static" ? "STATIC" : "DYNAMIC"}
             </span>
           }
         />
@@ -91,11 +91,11 @@ export function QRISInfo({ data }: Props) {
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="px-4 py-2.5 flex items-center justify-between gap-4">
-      <span className="text-sm text-gray-500 dark:text-gray-400 shrink-0">
+    <div className="px-4 py-3 flex items-center justify-between gap-4">
+      <span className="text-sm font-bold uppercase tracking-wide text-black/60 dark:text-white/60 shrink-0">
         {label}
       </span>
-      <span className="text-sm font-medium text-right truncate">{value}</span>
+      <span className="text-sm font-bold text-right truncate">{value}</span>
     </div>
   );
 }

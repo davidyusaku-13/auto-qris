@@ -15,13 +15,13 @@ export function ConvertForm({ parsed, onConvert }: Props) {
 
   if (parsed.method === "dynamic") {
     return (
-      <div className="rounded-xl border bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900 p-4">
-        <p className="text-sm text-green-700 dark:text-green-400 flex items-center gap-2">
+      <div className="border-3 border-black dark:border-white bg-brutal-lime p-4 shadow-brutal dark:shadow-brutal-white">
+        <p className="text-sm font-bold text-black flex items-center gap-2">
           <svg
-            className="w-4 h-4"
+            className="w-5 h-5"
             fill="none"
             viewBox="0 0 24 24"
-            strokeWidth={1.5}
+            strokeWidth={2}
             stroke="currentColor"
           >
             <path
@@ -55,17 +55,14 @@ export function ConvertForm({ parsed, onConvert }: Props) {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="rounded-xl border bg-white dark:bg-gray-900 overflow-hidden"
-    >
-      <div className="px-4 py-3 border-b bg-gray-50 dark:bg-gray-900/50">
-        <h2 className="text-sm font-semibold flex items-center gap-2">
+    <form onSubmit={handleSubmit} className="brutal-card overflow-hidden">
+      <div className="px-4 py-3 border-b-3 border-black dark:border-white bg-brutal-orange">
+        <h2 className="text-sm font-bold uppercase tracking-wide flex items-center gap-2 text-black">
           <svg
-            className="w-4 h-4 text-primary-500"
+            className="w-4 h-4"
             fill="none"
             viewBox="0 0 24 24"
-            strokeWidth={1.5}
+            strokeWidth={2}
             stroke="currentColor"
           >
             <path
@@ -79,13 +76,12 @@ export function ConvertForm({ parsed, onConvert }: Props) {
       </div>
 
       <div className="p-4 space-y-4">
-        {/* Amount */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+          <label className="block text-sm font-bold uppercase tracking-wide mb-2">
             Amount (Rupiah)
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-black/50 dark:text-white/50">
               Rp
             </span>
             <input
@@ -95,14 +91,13 @@ export function ConvertForm({ parsed, onConvert }: Props) {
               placeholder="0"
               min="1"
               required
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors"
+              className="brutal-input pl-10"
             />
           </div>
         </div>
 
-        {/* Service Fee */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+          <label className="block text-sm font-bold uppercase tracking-wide mb-2">
             Service Fee
           </label>
           <div className="flex gap-2">
@@ -114,10 +109,10 @@ export function ConvertForm({ parsed, onConvert }: Props) {
                   setFeeType(type);
                   setFeeValue("");
                 }}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium border transition-colors ${
+                className={`flex-1 py-2 px-3 text-sm font-bold border-3 border-black dark:border-white transition-all ${
                   feeType === type
-                    ? "border-primary-500 bg-primary-50 dark:bg-primary-950/30 text-primary-700 dark:text-primary-300"
-                    : "border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    ? "bg-brutal-purple text-black shadow-brutal-sm translate-x-[-1px] translate-y-[-1px] dark:shadow-brutal-white-sm"
+                    : "bg-white dark:bg-brutal-dark hover:translate-x-px hover:translate-y-px shadow-brutal-sm hover:shadow-none dark:shadow-brutal-white-sm dark:hover:shadow-none"
                 }`}
               >
                 {type === "none"
@@ -133,7 +128,7 @@ export function ConvertForm({ parsed, onConvert }: Props) {
         {feeType !== "none" && (
           <div>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-black/50 dark:text-white/50">
                 {feeType === "fixed" ? "Rp" : "%"}
               </span>
               <input
@@ -143,16 +138,13 @@ export function ConvertForm({ parsed, onConvert }: Props) {
                 placeholder="0"
                 min="0"
                 step={feeType === "percentage" ? "0.1" : "1"}
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors"
+                className="brutal-input pl-10"
               />
             </div>
           </div>
         )}
 
-        <button
-          type="submit"
-          className="w-full py-2.5 px-4 rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-        >
+        <button type="submit" className="brutal-btn-primary w-full text-sm uppercase tracking-wide">
           Convert to Dynamic QRIS
         </button>
       </div>
